@@ -1,7 +1,7 @@
 set(CHIP8_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include)
 set(CHIP8_SOURCES_DIR ${PROJECT_SOURCE_DIR}/src)
 
-set(tests cycle)
+set(tests cycle_0_7)
 #set(${tests}_mock_funcs getPressedKey init)
 
 message(WARNING ${CHIP8_HEADERS_DIR})

@@ -39,10 +39,8 @@ add_subdirectory(src)
 
 # Unit Tests
 if(ENABLE_UT)
-    message(WARNING "UT enabled")
     find_package(CMocka)
     if(CMOCKA_FOUND)
-        message(WARNING "CMOCKA FOUND")
         enable_testing()
         add_subdirectory(ut)
     endif(CMOCKA_FOUND)
