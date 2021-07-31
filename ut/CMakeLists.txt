@@ -1,15 +1,19 @@
 set(CHIP8_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include)
 set(CHIP8_SOURCES_DIR ${PROJECT_SOURCE_DIR}/src)
+set(TEST_SOURCES_DIR ${PROJECT_SOURCE_DIR}/ut)
 
-set(tests cycle_0_7)
-#set(${tests}_mock_funcs getPressedKey init)
+set(tests cycle_0_7 cycle_8)
 
-message(WARNING ${CHIP8_HEADERS_DIR})
 foreach(test_name IN LISTS tests)
-    add_executable(${test_name} ${test_name}.c ${CHIP8_HEADERS_DIR}/chip8.h ${CHIP8_SOURCES_DIR}/chip8.c)
+    add_executable(${test_name} ${test_name}.c 
+        ${TEST_SOURCES_DIR}/common.c
+        ${TEST_SOURCES_DIR}/common.h
+        ${CHIP8_HEADERS_DIR}/chip8.h 
+        ${CHIP8_SOURCES_DIR}/chip8.c)
     target_include_directories(${test_name} PRIVATE ${CMOCKA_INCLUDE_DIR})
     target_include_directories(${test_name} PRIVATE ${CHIP8_HEADERS_DIR})
     target_include_directories(${test_name} PRIVATE ${CHIP8_SOURCES_DIR})
+    target_include_directories(${test_name} PRIVATE ${TEST_SOURCES_DIR})
     target_link_libraries(${test_name} cmocka chip8_lib)
     add_test(NAME ${test_name} COMMAND $<TARGET_FILE:${test_name}>)
 endforeach()

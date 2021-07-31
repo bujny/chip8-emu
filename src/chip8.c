@@ -199,7 +199,7 @@ void runCycle(struct chip8* emu)
                 }
                 case 0xE:
                 {
-                    emu->V[FLAG_REG] = emu->V[vx] & 0x80;
+                    emu->V[FLAG_REG] = (emu->V[vx] & 0x80) >> 7;
                     emu->V[vx] = emu->V[vx] << 1;
                     emu->PC += NEXT_INSTRUCTION;
                     printf("SHL Vx {, Vy} \n");
