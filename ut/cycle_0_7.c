@@ -1,6 +1,6 @@
 #include "common.h"
 
-static void test_cls(void **state)
+static void test_CLS(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -11,7 +11,32 @@ static void test_cls(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + NEXT_INSTRUCTION);
 }
 
-static void test_jp(void **state)
+static void test_RET(void **state)
+{
+    struct chip8* emu = (struct chip8*)*state;
+
+    emu->SP = 2;
+    emu->stack[2] = 530;
+    write_opcode_to_memory(emu, 0x00EE);
+
+    runCycle(emu);
+
+    assert_int_equal(emu->PC, 530);
+    assert_int_equal(emu->SP, 1);
+}
+
+static void test_SYS(void **state)
+{
+    struct chip8* emu = (struct chip8*)*state;
+
+    write_opcode_to_memory(emu, 0x0033);
+
+    runCycle(emu);
+
+    assert_int_equal(emu->PC, PROGRAM_START_LOCATION);
+}
+
+static void test_JP(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -22,7 +47,7 @@ static void test_jp(void **state)
     assert_int_equal(emu->PC, 0x2BC);
 }
 
-static void test_call(void **state)
+static void test_CALL(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -34,7 +59,7 @@ static void test_call(void **state)
     assert_int_equal(emu->stack[emu->SP], PROGRAM_START_LOCATION);
 }
 
-static void test_se_skip(void **state)
+static void test_SE_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -46,7 +71,7 @@ static void test_se_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + SKIP_INSTRUCTION);
 }
 
-static void test_se_no_skip(void **state)
+static void test_SE_no_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -57,7 +82,7 @@ static void test_se_no_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + NEXT_INSTRUCTION);
 }
 
-static void test_sne_skip(void **state)
+static void test_SNE_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -68,7 +93,7 @@ static void test_sne_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + SKIP_INSTRUCTION);
 }
 
-static void test_sne_no_skip(void **state)
+static void test_SNE_no_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -80,7 +105,7 @@ static void test_sne_no_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + NEXT_INSTRUCTION);
 }
 
-static void test_se_vxvy_skip(void **state)
+static void test_SE_vx_vy_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -93,7 +118,7 @@ static void test_se_vxvy_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + SKIP_INSTRUCTION);
 }
 
-static void test_se_vxvy_no_skip(void **state)
+static void test_SE_vx_vy_no_skip(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -105,7 +130,7 @@ static void test_se_vxvy_no_skip(void **state)
     assert_int_equal(emu->PC, PROGRAM_START_LOCATION + NEXT_INSTRUCTION);
 }
 
-static void test_ld_vxbyte(void **state)
+static void test_LD_vx_byte(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -117,7 +142,7 @@ static void test_ld_vxbyte(void **state)
     assert_int_equal(emu->V[0xA], 0x11);
 }
 
-static void test_add_vxbyte(void **state)
+static void test_ADD_vx_byte(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -130,7 +155,7 @@ static void test_add_vxbyte(void **state)
     assert_int_equal(emu->V[0xA], 0x12);
 }
 
-static void test_add_vxbyte_wrap(void **state)
+static void test_ADD_vx_byte_wrap(void **state)
 {
     struct chip8* emu = (struct chip8*)*state;
 
@@ -147,18 +172,20 @@ static void test_add_vxbyte_wrap(void **state)
 int main()
 {
     const struct CMUnitTest cycle_0_7[] = {
-        cmocka_unit_test_setup_teardown(test_cls, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_jp, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_call, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_se_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_se_no_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_sne_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_sne_no_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_se_vxvy_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_se_vxvy_no_skip, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_ld_vxbyte, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_add_vxbyte, setup_emu, teardown_emu),
-        cmocka_unit_test_setup_teardown(test_add_vxbyte_wrap, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_CLS, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_RET, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SYS, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_JP, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_CALL, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SE_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SE_no_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SNE_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SNE_no_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SE_vx_vy_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_SE_vx_vy_no_skip, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_LD_vx_byte, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_ADD_vx_byte, setup_emu, teardown_emu),
+        cmocka_unit_test_setup_teardown(test_ADD_vx_byte_wrap, setup_emu, teardown_emu),
     };
 
     return cmocka_run_group_tests(cycle_0_7, NULL, NULL);

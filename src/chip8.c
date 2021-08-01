@@ -57,10 +57,7 @@ void runCycle(struct chip8* emu)
                 case 0xEE:
                 {
                     emu->PC = emu->stack[emu->SP];
-                    if(emu->SP > 0)
-                    {
-                        emu->SP--;
-                    }
+                    emu->SP--;
                     printf("RET \n");
                     break;
                 }
@@ -365,9 +362,11 @@ void runCycle(struct chip8* emu)
                     break;
                 }
             }
+            break;
         }
         default:
         {
+            /* Unreachable */
             printf("ERROR \n");
             break;
         }

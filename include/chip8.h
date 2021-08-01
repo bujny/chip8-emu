@@ -42,4 +42,6 @@ struct chip8 {
 
 void runCycle(struct chip8* emu);
 
+void init(struct chip8* emu);
+
 #endif /* CHIP8_H */
