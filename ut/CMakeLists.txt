@@ -2,7 +2,7 @@ set(CHIP8_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include)
 set(CHIP8_SOURCES_DIR ${PROJECT_SOURCE_DIR}/src)
 set(TEST_SOURCES_DIR ${PROJECT_SOURCE_DIR}/ut)
 
-set(tests cycle_0_7 cycle_8 cycle_9_D cycle_E)
+set(tests cycle_0_7 cycle_8 cycle_9_D cycle_E cycle_F)
 
 foreach(test_name IN LISTS tests)
     add_executable(${test_name} ${test_name}.c 
