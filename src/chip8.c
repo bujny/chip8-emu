@@ -3,7 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+
+#include "raylib.h"
+
 #include "chip8.h"
+
 
 void init(struct chip8* emu)
 {

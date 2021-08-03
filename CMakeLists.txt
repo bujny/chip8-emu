@@ -34,6 +34,8 @@ endif()
 
 set(CMAKE_C_FLAGS "-Wall -Werror -pedantic ${CMAKE_C_FLAGS_COVERAGE}")
 
+find_package(raylib REQUIRED)
+
 # Building actual project
 add_subdirectory(src)
 
