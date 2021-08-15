@@ -38,6 +38,7 @@ struct chip8 {
     uint16_t stack[STACK_SIZE];
     /* keyboard */
     uint8_t key[KEYPAD_SIZE];
+    uint8_t display[64][32];
 };
 
 void runCycle(struct chip8* emu);

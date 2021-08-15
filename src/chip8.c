@@ -8,7 +8,6 @@
 
 #include "chip8.h"
 
-
 void init(struct chip8* emu)
 {
     time_t t;   
@@ -17,7 +16,10 @@ void init(struct chip8* emu)
     emu->I = 0;
     emu->SP = 0;
 
-    /* TODO: Clear display */
+    for (int i = 0; i < 64; i++)
+    {
+        memset(emu->display[i], (i % 2), 32 * sizeof(uint8_t));
+    }
 
     memset(emu->stack, 0, STACK_SIZE * sizeof(uint16_t));
     memset(emu->V, 0, REG_QUANTITY * sizeof(uint8_t));
@@ -385,19 +387,35 @@ int main()
     printf("Welp, hello.\n");
     struct chip8 emulator;
 
+    const int screenWidth = 640;
+    const int screenHeight = 320;
+
+    InitWindow(screenWidth, screenHeight, "Chip8 emulator");
+    SetTargetFPS(60);
     init(&emulator);
 
     // load program
 
-    while(1)
+    while(!WindowShouldClose())
     {
         runCycle(&emulator);
 
-        // handle graphics
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            for (int x = 0; x < 64; x++)
+            {
+                for(int y = 0; y < 32; y++)
+                {
+                    DrawRectangle(x * 10, y * 10, 10, 10, emulator.display[x][y] ? BLACK : RAYWHITE);
+                }
+            }
+        EndDrawing();
 
         // handle input
     }
     
+    CloseWindow();
+
     return 0;
 }
 #endif /* !BUILD_STATIC_LIB */
