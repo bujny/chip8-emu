@@ -4,7 +4,7 @@ project(chip8_emu)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
-option(ENABLE_UT "Perform unit tests after build" ON)
+option(ENABLE_UT "Perform unit tests after build" OFF)
 option(ENABLE_COVERAGE "Build coverage report" ON)
 
 # Coverage

@@ -3,10 +3,111 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "raylib.h"
 
 #include "chip8.h"
+
+void loadFonts(struct chip8* emu)
+{
+    emu->memory[0] = 0xF0; /* **** */
+    emu->memory[1] = 0x90; /* *  * */
+    emu->memory[2] = 0x90; /* *  * */
+    emu->memory[3] = 0x90; /* *  * */
+    emu->memory[4] = 0xF0; /* **** */
+
+    emu->memory[5] = 0x20; /*   *  */
+    emu->memory[6] = 0x60; /*  **  */
+    emu->memory[7] = 0x20; /*   *  */
+    emu->memory[8] = 0x20; /*   *  */
+    emu->memory[9] = 0x70; /*  *** */
+
+    emu->memory[10] = 0xF0; /* **** */
+    emu->memory[11] = 0x10; /*    * */
+    emu->memory[12] = 0xF0; /* **** */
+    emu->memory[13] = 0x80; /* *    */
+    emu->memory[14] = 0xF0; /* **** */
+
+    emu->memory[15] = 0xF0; /* **** */
+    emu->memory[16] = 0x10; /*    * */
+    emu->memory[17] = 0xF0; /* **** */
+    emu->memory[18] = 0x10; /*    * */
+    emu->memory[19] = 0xF0; /* **** */
+
+    emu->memory[20] = 0x90; /* *  * */
+    emu->memory[21] = 0x90; /* *  * */
+    emu->memory[22] = 0xF0; /* **** */
+    emu->memory[23] = 0x10; /*    * */
+    emu->memory[24] = 0x10; /*    * */
+
+    emu->memory[25] = 0xF0; /* **** */
+    emu->memory[26] = 0x80; /* *    */
+    emu->memory[27] = 0xF0; /* **** */
+    emu->memory[28] = 0x10; /*    * */
+    emu->memory[29] = 0xF0; /* **** */
+
+    emu->memory[30] = 0xF0; /* **** */
+    emu->memory[31] = 0x80; /* *    */
+    emu->memory[32] = 0xF0; /* **** */
+    emu->memory[33] = 0x90; /* *  * */
+    emu->memory[34] = 0xF0; /* **** */
+
+    emu->memory[35] = 0xF0; /* **** */
+    emu->memory[36] = 0x10; /*    * */
+    emu->memory[37] = 0x20; /*   *  */
+    emu->memory[38] = 0x40; /*  *   */
+    emu->memory[39] = 0x40; /*  *   */
+
+    emu->memory[40] = 0xF0; /* **** */
+    emu->memory[41] = 0x90; /* *  * */
+    emu->memory[42] = 0xF0; /* **** */
+    emu->memory[43] = 0x90; /* *  * */
+    emu->memory[44] = 0xF0; /* **** */
+
+    emu->memory[45] = 0xF0; /* **** */
+    emu->memory[46] = 0x90; /* *  * */
+    emu->memory[47] = 0xF0; /* **** */
+    emu->memory[48] = 0x10; /*    * */
+    emu->memory[49] = 0xF0; /* **** */
+
+    emu->memory[50] = 0xF0; /* **** */
+    emu->memory[51] = 0x90; /* *  * */
+    emu->memory[52] = 0xF0; /* **** */
+    emu->memory[53] = 0x90; /* *  * */
+    emu->memory[54] = 0x90; /* *  * */
+
+    emu->memory[55] = 0xE0; /* ***  */
+    emu->memory[56] = 0x90; /* *  * */
+    emu->memory[57] = 0xE0; /* ***  */
+    emu->memory[58] = 0x90; /* *  * */
+    emu->memory[59] = 0xE0; /* ***  */
+
+    emu->memory[60] = 0xF0; /* **** */
+    emu->memory[61] = 0x80; /* *    */
+    emu->memory[62] = 0x80; /* *    */
+    emu->memory[63] = 0x80; /* *    */
+    emu->memory[64] = 0xF0; /* **** */
+
+    emu->memory[65] = 0xE0; /* ***  */
+    emu->memory[66] = 0x90; /* *  * */
+    emu->memory[67] = 0x90; /* *  * */
+    emu->memory[68] = 0x90; /* *  * */
+    emu->memory[69] = 0xE0; /* ***  */
+
+    emu->memory[70] = 0xF0; /* **** */
+    emu->memory[71] = 0x80; /* *    */
+    emu->memory[72] = 0xF0; /* **** */
+    emu->memory[73] = 0x80; /* *    */
+    emu->memory[74] = 0xF0; /* **** */
+
+    emu->memory[75] = 0xF0; /* **** */
+    emu->memory[76] = 0x80; /* *    */
+    emu->memory[77] = 0xF0; /* **** */
+    emu->memory[78] = 0x80; /* *    */
+    emu->memory[79] = 0x80; /* *    */
+}
 
 void init(struct chip8* emu)
 {
@@ -16,15 +117,17 @@ void init(struct chip8* emu)
     emu->I = 0;
     emu->SP = 0;
 
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < DISPLAY_X; i++)
     {
-        memset(emu->display[i], (i % 2), 32 * sizeof(uint8_t));
+        memset(emu->display[i], 0, DISPLAY_Y * sizeof(uint8_t));
     }
 
     memset(emu->stack, 0, STACK_SIZE * sizeof(uint16_t));
     memset(emu->V, 0, REG_QUANTITY * sizeof(uint8_t));
     memset(emu->memory, 0, MEMORY_SIZE * sizeof(uint8_t));
     memset(emu->key, 0, KEYPAD_SIZE * sizeof(uint8_t));
+
+    loadFonts(emu);
 }
 
 int8_t getPressedKey(uint8_t* key)
@@ -55,7 +158,10 @@ void runCycle(struct chip8* emu)
             {
                 case 0xE0:
                 {
-                    /* TODO: clear the display */
+                    for (int i = 0; i < DISPLAY_X; i++)
+                    {
+                        memset(emu->display[i], 0, DISPLAY_Y * sizeof(uint8_t));
+                    }
                     emu->PC += 2;
                     printf("CLS \n");
                     break;
@@ -121,7 +227,7 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->V[vx] = byte;
             emu->PC += NEXT_INSTRUCTION;
-            printf("LD Vx, byte \n");
+            printf("LD V[%d], byte=%d \n", vx, byte);
             break;
         }
         case 0x7000:
@@ -228,7 +334,7 @@ void runCycle(struct chip8* emu)
         {
             emu->I = opcode & 0x0FFF;
             emu->PC += NEXT_INSTRUCTION;
-            printf("LD I, addr \n");
+            printf("LD I, addr=%d \n", emu->I);
             break;
         }
         case 0xB000:
@@ -244,12 +350,34 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->V[vx] = rand_b & byte;
             emu->PC += NEXT_INSTRUCTION;
-            printf("RND Vx, byte \n");
+            printf("RND V[%d]=%d, byte=%d \n", vx, emu->V[vx], byte);
             break;
         }
         case 0xD000:
         {
-            /* TODO */
+            uint8_t xpos = emu->V[(opcode & 0x0F00) >> 8];
+            uint8_t ypos = emu->V[(opcode & 0x00F0) >> 4];
+            uint8_t spriteHeight = opcode & 0x000F;
+
+            for(uint8_t line = 0; line < spriteHeight; line++)
+            {
+                uint8_t spriteLine = emu->memory[emu->I + line];
+
+                for(uint8_t linePixel = 0; linePixel < 8; linePixel++)
+                {
+                    uint8_t pixel = (spriteLine & (0x80 >> linePixel)) >> (7 - linePixel);
+                    uint8_t calcPosX = xpos + linePixel;
+                    calcPosX = (calcPosX >= DISPLAY_X) ? (calcPosX % DISPLAY_X) : calcPosX;
+                    uint8_t calcPosY = ypos + line;
+                    calcPosY = (calcPosY >= DISPLAY_Y) ? (calcPosY % DISPLAY_Y) : calcPosY;
+                    emu->display[calcPosX][calcPosY] ^= pixel;
+                    if (pixel && !emu->display[calcPosX][calcPosY])
+                    {
+                        emu->V[FLAG_REG] = COLLISION;
+                    }
+                }
+            }
+
             emu->PC += NEXT_INSTRUCTION;
             printf("DRW Vx, Vy, nibble \n");
             break;
@@ -326,8 +454,9 @@ void runCycle(struct chip8* emu)
                 }
                 case 0x29:
                 {
-                    /* TODO */
-                    printf("LD F, Vx\n");
+                    emu->I = emu->V[vx] * 5;
+                    emu->PC += NEXT_INSTRUCTION;
+                    printf("LD F, V[%d] (I=%d)\n", vx, emu->I);
                     break;
                 }
                 case 0x33:
@@ -339,7 +468,7 @@ void runCycle(struct chip8* emu)
                     emu->memory[emu->I + 1] = tens;
                     emu->memory[emu->I + 2] = ones;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD B, Vx\n");
+                    printf("LD B, Vx, [%d|%d|%d]\n", hundreds, tens, ones);
                     break;
                 }
                 case 0x55:
@@ -349,7 +478,7 @@ void runCycle(struct chip8* emu)
                         emu->memory[emu->I + i] = emu->V[i];
                     }
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD [I], Vx");
+                    printf("LD [I], Vx\n");
                     break;
                 }
                 case 0x65:
@@ -357,9 +486,11 @@ void runCycle(struct chip8* emu)
                     for (int i = 0; i < REG_QUANTITY; i++)
                     {
                         emu->V[i] = emu->memory[emu->I + i];
+                        printf("%d ", emu->V[i]);
                     }
+                    printf("\n");
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD Vx, [I]");
+                    printf("LD Vx, [I]\n");
                     break;
                 }
                 default:
@@ -377,8 +508,58 @@ void runCycle(struct chip8* emu)
             break;
         }
     }
+
+    usleep(100000);
  
   // Update timers
+}
+
+void handleKeyInput(struct chip8* emu)
+{
+    emu->key[0x1] = (uint8_t)IsKeyDown(KEY_ONE);
+    emu->key[0x2] = (uint8_t)IsKeyDown(KEY_TWO);
+    emu->key[0x3] = (uint8_t)IsKeyDown(KEY_THREE);
+    emu->key[0xC] = (uint8_t)IsKeyDown(KEY_FOUR);
+
+    emu->key[0x4] = (uint8_t)IsKeyDown(KEY_Q);
+    emu->key[0x5] = (uint8_t)IsKeyDown(KEY_W);
+    emu->key[0x6] = (uint8_t)IsKeyDown(KEY_E);
+    emu->key[0xD] = (uint8_t)IsKeyDown(KEY_R);
+
+    emu->key[0x7] = (uint8_t)IsKeyDown(KEY_A);
+    emu->key[0x8] = (uint8_t)IsKeyDown(KEY_S);
+    emu->key[0x9] = (uint8_t)IsKeyDown(KEY_D);
+    emu->key[0xE] = (uint8_t)IsKeyDown(KEY_F);
+
+    emu->key[0xA] = (uint8_t)IsKeyDown(KEY_Z);
+    emu->key[0xB] = (uint8_t)IsKeyDown(KEY_X);
+    emu->key[0x0] = (uint8_t)IsKeyDown(KEY_C);
+    emu->key[0xF] = (uint8_t)IsKeyDown(KEY_V);
+}
+
+void loadProgram(struct chip8* emu)
+{
+    //FILE* prog = fopen("./random_number_test.ch8", "rb");
+    FILE* prog = fopen("./test_opcode.ch8", "rb");
+    uint16_t i = 0;
+
+    if (NULL != prog)
+    {
+        while(1)
+        {
+            if(feof(prog))
+            {
+                break;
+            }
+            fread(emu->memory + PROGRAM_START_LOCATION + i, sizeof(uint8_t), sizeof(uint8_t), prog);
+            i++;
+        }
+        fclose(prog);
+    }
+    else
+    {
+        printf("Error opening file: %d\n", errno);
+    }
 }
 
 #if !defined(BUILD_STATIC_LIB)
@@ -392,9 +573,9 @@ int main()
 
     InitWindow(screenWidth, screenHeight, "Chip8 emulator");
     SetTargetFPS(60);
+    
     init(&emulator);
-
-    // load program
+    loadProgram(&emulator);
 
     while(!WindowShouldClose())
     {
@@ -411,7 +592,7 @@ int main()
             }
         EndDrawing();
 
-        // handle input
+        handleKeyInput(&emulator);
     }
     
     CloseWindow();

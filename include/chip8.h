@@ -8,7 +8,8 @@
 #define KEYPAD_SIZE             16
 
 #define CARRY      1
-#define NOT_BORROW 1 
+#define NOT_BORROW 1
+#define COLLISION  1 
 #define NO_FLAG    0
 #define FLAG_REG   0xF
 
@@ -18,6 +19,10 @@
 #define KEY_DOWN 1
 #define KEY_UP 0
 #define NO_KEY_PRESSED -1
+
+#define DISPLAY_X 64
+#define DISPLAY_Y 32
+#define DISPLAY_SCALING 10
 
 
 struct chip8 {
@@ -38,7 +43,8 @@ struct chip8 {
     uint16_t stack[STACK_SIZE];
     /* keyboard */
     uint8_t key[KEYPAD_SIZE];
-    uint8_t display[64][32];
+    /* Display */
+    uint8_t display[DISPLAY_X][DISPLAY_Y];
 };
 
 void runCycle(struct chip8* emu);
