@@ -148,6 +148,9 @@ int8_t getPressedKey(uint8_t* key)
 
 void runCycle(struct chip8* emu)
 {
+    static int counter = 0;
+    counter++;
+
     uint16_t opcode = emu->memory[emu->PC] << 8 | emu->memory[emu->PC+1];
 
     switch(opcode & 0xF000)
@@ -191,7 +194,7 @@ void runCycle(struct chip8* emu)
         case 0x2000:
         {
             emu->SP++;
-            emu->stack[emu->SP] = emu->PC;
+            emu->stack[emu->SP] = emu->PC + NEXT_INSTRUCTION;
             emu->PC = opcode & 0x0FFF;
             printf("CALL \n");
             break;
@@ -357,6 +360,7 @@ void runCycle(struct chip8* emu)
         {
             uint8_t xpos = emu->V[(opcode & 0x0F00) >> 8];
             uint8_t ypos = emu->V[(opcode & 0x00F0) >> 4];
+            printf("\nxpos=%d, ypos=%d\n", xpos, ypos);
             uint8_t spriteHeight = opcode & 0x000F;
 
             for(uint8_t line = 0; line < spriteHeight; line++)
@@ -379,7 +383,8 @@ void runCycle(struct chip8* emu)
             }
 
             emu->PC += NEXT_INSTRUCTION;
-            printf("DRW Vx, Vy, nibble \n");
+            printf("DRW V[%d]=%d, V[%d]=%d, nibble=%d \n", 
+                (opcode & 0x0F00) >> 8, xpos, (opcode & 0x00F0) >> 4, ypos, spriteHeight);
             break;
         }
         case 0xE000:
@@ -508,10 +513,17 @@ void runCycle(struct chip8* emu)
             break;
         }
     }
-
-    usleep(100000);
  
-  // Update timers
+    if ((emu->delay > 0) && (counter >= 60))
+    {
+        emu->delay--;
+    }
+    if (emu->sound > 0 && (counter >= 60))
+    {
+        emu->sound--;
+    }
+
+    usleep(16667);
 }
 
 void handleKeyInput(struct chip8* emu)
@@ -537,10 +549,9 @@ void handleKeyInput(struct chip8* emu)
     emu->key[0xF] = (uint8_t)IsKeyDown(KEY_V);
 }
 
-void loadProgram(struct chip8* emu)
+int loadProgram(struct chip8* emu, const char* name)
 {
-    //FILE* prog = fopen("./random_number_test.ch8", "rb");
-    FILE* prog = fopen("./test_opcode.ch8", "rb");
+    FILE* prog = fopen(name, "rb");
     uint16_t i = 0;
 
     if (NULL != prog)
@@ -559,23 +570,32 @@ void loadProgram(struct chip8* emu)
     else
     {
         printf("Error opening file: %d\n", errno);
+        return -1;
     }
+
+    return 0;
 }
 
 #if !defined(BUILD_STATIC_LIB)
-int main()
+int main(int argc, char **argv)
 {
+    if (2 != argc)
+    {
+        printf("HOW TO RUN: ./chip8 name_of_prog\n");
+        return -1;
+    }
+
     printf("Welp, hello.\n");
     struct chip8 emulator;
 
-    const int screenWidth = 640;
-    const int screenHeight = 320;
-
-    InitWindow(screenWidth, screenHeight, "Chip8 emulator");
-    SetTargetFPS(60);
-    
     init(&emulator);
-    loadProgram(&emulator);
+    if (0 != loadProgram(&emulator, argv[1]))
+    {
+        return -1;
+    }
+
+    InitWindow(DISPLAY_X * DISPLAY_SCALING, DISPLAY_Y * DISPLAY_SCALING, "Chip8 emulator");
+    SetTargetFPS(60);
 
     while(!WindowShouldClose())
     {
