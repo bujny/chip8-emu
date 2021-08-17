@@ -5,10 +5,17 @@
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "raylib.h"
 
 #include "chip8.h"
+
+#ifndef NO_DEBUG
+    #define LOG(...) printf(__VA_ARGS__)
+#else
+    #define LOG(f_, ...) 
+#endif 
 
 void loadFonts(struct chip8* emu)
 {
@@ -166,20 +173,20 @@ void runCycle(struct chip8* emu)
                         memset(emu->display[i], 0, DISPLAY_Y * sizeof(uint8_t));
                     }
                     emu->PC += 2;
-                    printf("CLS \n");
+                    LOG("CLS \n");
                     break;
                 }
                 case 0xEE:
                 {
                     emu->PC = emu->stack[emu->SP];
                     emu->SP--;
-                    printf("RET \n");
+                    LOG("RET \n");
                     break;
                 }
                 default:
                 {
                     /* TODO */
-                    printf("SYS \n");
+                    LOG("SYS \n");
                     break;
                 }
             }
@@ -188,7 +195,7 @@ void runCycle(struct chip8* emu)
         case 0x1000:
         {
             emu->PC = opcode & 0x0FFF;
-            printf("JP \n");
+            LOG("JP \n");
             break;
         }
         case 0x2000:
@@ -196,7 +203,7 @@ void runCycle(struct chip8* emu)
             emu->SP++;
             emu->stack[emu->SP] = emu->PC + NEXT_INSTRUCTION;
             emu->PC = opcode & 0x0FFF;
-            printf("CALL \n");
+            LOG("CALL \n");
             break;
         }
         case 0x3000:
@@ -205,7 +212,7 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             
             emu->PC += (emu->V[vx] == byte) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-            printf("SE Vx, byte \n");
+            LOG("SE Vx, byte \n");
             break;
         }
         case 0x4000:
@@ -213,7 +220,7 @@ void runCycle(struct chip8* emu)
             uint8_t byte = opcode & 0x00FF;
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->PC += (emu->V[vx] != byte) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-            printf("SNE Vx, byte \n");
+            LOG("SNE Vx, byte \n");
             break;
         }
         case 0x5000:
@@ -221,7 +228,7 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
             emu->PC += (emu->V[vx] == emu->V[vy]) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-            printf("SE Vx, Vy \n");
+            LOG("SE Vx, Vy \n");
             break;
         }
         case 0x6000:
@@ -230,7 +237,7 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->V[vx] = byte;
             emu->PC += NEXT_INSTRUCTION;
-            printf("LD V[%d], byte=%d \n", vx, byte);
+            LOG("LD V[%d], byte=%d \n", vx, byte);
             break;
         }
         case 0x7000:
@@ -238,7 +245,7 @@ void runCycle(struct chip8* emu)
             uint8_t byte = opcode & 0x00FF;
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->V[vx] = emu->V[vx] + byte;
-            printf("ADD Vx, byte \n");
+            LOG("ADD Vx, byte \n");
             emu->PC += NEXT_INSTRUCTION;
             break;
         }
@@ -251,28 +258,28 @@ void runCycle(struct chip8* emu)
                 case 0x0:
                 {
                     emu->V[vx] = emu->V[vy];
-                    printf("LD Vx, Vy \n");
+                    LOG("LD Vx, Vy \n");
                     emu->PC += NEXT_INSTRUCTION;
                     break;
                 }
                 case 0x1:
                 {
                     emu->V[vx] = emu->V[vx] | emu->V[vy];
-                    printf("OR Vx, Vy \n");
+                    LOG("OR Vx, Vy \n");
                     emu->PC += NEXT_INSTRUCTION;
                     break;
                 }
                 case 0x2:
                 {
                     emu->V[vx] = emu->V[vx] & emu->V[vy];
-                    printf("AND Vx, Vy \n");
+                    LOG("AND Vx, Vy \n");
                     emu->PC += NEXT_INSTRUCTION;
                     break;
                 }
                 case 0x3:
                 {
                     emu->V[vx] = emu->V[vx] ^ emu->V[vy];
-                    printf("XOR Vx, Vy \n");
+                    LOG("XOR Vx, Vy \n");
                     emu->PC += NEXT_INSTRUCTION;
                     break;
                 }
@@ -282,7 +289,7 @@ void runCycle(struct chip8* emu)
                     emu->V[FLAG_REG] = (sum > UINT8_MAX) ? CARRY : NO_FLAG;
                     emu->V[vx] = sum & 0x00FF;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("ADD Vx, Vy \n");
+                    LOG("ADD Vx, Vy \n");
                     break;
                 }
                 case 0x5:
@@ -290,7 +297,7 @@ void runCycle(struct chip8* emu)
                     emu->V[FLAG_REG] = (emu->V[vx] > emu->V[vy]) ? NOT_BORROW : NO_FLAG;
                     emu->V[vx] = emu->V[vx] - emu->V[vy];
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("SUB Vx, Vy \n");
+                    LOG("SUB Vx, Vy \n");
                     break;
                 }
                 case 0x6:
@@ -298,7 +305,7 @@ void runCycle(struct chip8* emu)
                     emu->V[FLAG_REG] = emu->V[vx] & 0x01;
                     emu->V[vx] = emu->V[vx] >> 1;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("SHR Vx {, Vy} \n");
+                    LOG("SHR Vx {, Vy} \n");
                     break;
                 }
                 case 0x7:
@@ -306,7 +313,7 @@ void runCycle(struct chip8* emu)
                     emu->V[FLAG_REG] = (emu->V[vy] > emu->V[vx]) ? NOT_BORROW : NO_FLAG;
                     emu->V[vx] = emu->V[vy] - emu->V[vx];
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("SUBN Vx, Vy \n");
+                    LOG("SUBN Vx, Vy \n");
                     break;
                 }
                 case 0xE:
@@ -314,12 +321,12 @@ void runCycle(struct chip8* emu)
                     emu->V[FLAG_REG] = (emu->V[vx] & 0x80) >> 7;
                     emu->V[vx] = emu->V[vx] << 1;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("SHL Vx {, Vy} \n");
+                    LOG("SHL Vx {, Vy} \n");
                     break;
                 }
                 default:
                 {
-                    printf("ERROR at 0x8000 \n");
+                    LOG("ERROR at 0x8000 \n");
                     break;
                 }
             }
@@ -330,20 +337,20 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
             emu->PC += (emu->V[vx] != emu->V[vy]) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-            printf("SNE Vx, Vy \n");
+            LOG("SNE Vx, Vy \n");
             break;
         }
         case 0xA000:
         {
             emu->I = opcode & 0x0FFF;
             emu->PC += NEXT_INSTRUCTION;
-            printf("LD I, addr=%d \n", emu->I);
+            LOG("LD I, addr=%d \n", emu->I);
             break;
         }
         case 0xB000:
         {
             emu->PC = (opcode & 0x0FFF) + emu->V[0];
-            printf("JP V0, addr \n");
+            LOG("JP V0, addr \n");
             break;
         }
         case 0xC000:
@@ -353,16 +360,16 @@ void runCycle(struct chip8* emu)
             uint8_t vx = (opcode & 0x0F00) >> 8;
             emu->V[vx] = rand_b & byte;
             emu->PC += NEXT_INSTRUCTION;
-            printf("RND V[%d]=%d, byte=%d \n", vx, emu->V[vx], byte);
+            LOG("RND V[%d]=%d, byte=%d \n", vx, emu->V[vx], byte);
             break;
         }
         case 0xD000:
         {
             uint8_t xpos = emu->V[(opcode & 0x0F00) >> 8];
             uint8_t ypos = emu->V[(opcode & 0x00F0) >> 4];
-            printf("\nxpos=%d, ypos=%d\n", xpos, ypos);
             uint8_t spriteHeight = opcode & 0x000F;
 
+            emu->V[0xF] = NO_FLAG;
             for(uint8_t line = 0; line < spriteHeight; line++)
             {
                 uint8_t spriteLine = emu->memory[emu->I + line];
@@ -383,7 +390,7 @@ void runCycle(struct chip8* emu)
             }
 
             emu->PC += NEXT_INSTRUCTION;
-            printf("DRW V[%d]=%d, V[%d]=%d, nibble=%d \n", 
+            LOG("DRW V[%d]=%d, V[%d]=%d, nibble=%d \n", 
                 (opcode & 0x0F00) >> 8, xpos, (opcode & 0x00F0) >> 4, ypos, spriteHeight);
             break;
         }
@@ -395,18 +402,18 @@ void runCycle(struct chip8* emu)
                 case 0x9E:
                 {
                     emu->PC += (emu->key[emu->V[vx]]) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-                    printf("SKP Vx \n");
+                    LOG("SKP Vx \n");
                     break;
                 }
                 case 0xA1:
                 {
                     emu->PC += (!emu->key[emu->V[vx]]) ? SKIP_INSTRUCTION : NEXT_INSTRUCTION;
-                    printf("SKNP Vx \n");
+                    LOG("SKNP Vx \n");
                     break;
                 }
                 default:
                 {
-                    printf("ERROR AT 0xE000 \n");
+                    LOG("ERROR AT 0xE000 \n");
                     break;
                 }
             }
@@ -421,7 +428,7 @@ void runCycle(struct chip8* emu)
                 {
                     emu->V[vx] = emu->delay;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD Vx, DT\n");
+                    LOG("LD Vx, DT\n");
                     break;
                 }
                 case 0x0A:
@@ -433,35 +440,35 @@ void runCycle(struct chip8* emu)
                         emu->V[vx] = (uint8_t)pressedKey;
                         emu->PC += NEXT_INSTRUCTION;
                     }
-                    printf("LD Vx, K\n");
+                    LOG("LD Vx, K\n");
                     break;
                 }
                 case 0x15:
                 {
                     emu->delay = emu->V[vx];
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD DT, Vx\n");
+                    LOG("LD DT, Vx\n");
                     break;
                 }
                 case 0x18:
                 {
                     emu->sound = emu->V[vx];
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD ST, Vx\n");
+                    LOG("LD ST, Vx\n");
                     break;
                 }
                 case 0x1E:
                 {
                     emu->I += emu->V[vx];
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("ADD I, Vx\n");
+                    LOG("ADD I, Vx\n");
                     break;
                 }
                 case 0x29:
                 {
                     emu->I = emu->V[vx] * 5;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD F, V[%d] (I=%d)\n", vx, emu->I);
+                    LOG("LD F, V[%d] (I=%d)\n", vx, emu->I);
                     break;
                 }
                 case 0x33:
@@ -473,7 +480,7 @@ void runCycle(struct chip8* emu)
                     emu->memory[emu->I + 1] = tens;
                     emu->memory[emu->I + 2] = ones;
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD B, Vx, [%d|%d|%d]\n", hundreds, tens, ones);
+                    LOG("LD B, Vx, [%d|%d|%d]\n", hundreds, tens, ones);
                     break;
                 }
                 case 0x55:
@@ -483,7 +490,7 @@ void runCycle(struct chip8* emu)
                         emu->memory[emu->I + i] = emu->V[i];
                     }
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD [I], Vx\n");
+                    LOG("LD [I], Vx\n");
                     break;
                 }
                 case 0x65:
@@ -491,16 +498,16 @@ void runCycle(struct chip8* emu)
                     for (int i = 0; i < REG_QUANTITY; i++)
                     {
                         emu->V[i] = emu->memory[emu->I + i];
-                        printf("%d ", emu->V[i]);
+                        LOG("%d ", emu->V[i]);
                     }
-                    printf("\n");
+                    LOG("\n");
                     emu->PC += NEXT_INSTRUCTION;
-                    printf("LD Vx, [I]\n");
+                    LOG("LD Vx, [I]\n");
                     break;
                 }
                 default:
                 {
-                    printf("ERROR AT 0xF000 \n");
+                    LOG("ERROR AT 0xF000 \n");
                     break;
                 }
             }
@@ -509,7 +516,7 @@ void runCycle(struct chip8* emu)
         default:
         {
             /* Unreachable */
-            printf("ERROR \n");
+            LOG("ERROR \n");
             break;
         }
     }
@@ -523,7 +530,7 @@ void runCycle(struct chip8* emu)
         emu->sound--;
     }
 
-    usleep(16667);
+    usleep(16667); /* to achieve 60 opcodes/s */
 }
 
 void handleKeyInput(struct chip8* emu)
@@ -569,7 +576,7 @@ int loadProgram(struct chip8* emu, const char* name)
     }
     else
     {
-        printf("Error opening file: %d\n", errno);
+        LOG("Error opening file: %d\n", errno);
         return -1;
     }
 
@@ -581,11 +588,11 @@ int main(int argc, char **argv)
 {
     if (2 != argc)
     {
-        printf("HOW TO RUN: ./chip8 name_of_prog\n");
+        LOG("HOW TO RUN: ./chip8 name_of_prog\n");
         return -1;
     }
 
-    printf("Welp, hello.\n");
+    LOG("Welp, hello.\n");
     struct chip8 emulator;
 
     init(&emulator);
@@ -595,7 +602,6 @@ int main(int argc, char **argv)
     }
 
     InitWindow(DISPLAY_X * DISPLAY_SCALING, DISPLAY_Y * DISPLAY_SCALING, "Chip8 emulator");
-    SetTargetFPS(60);
 
     while(!WindowShouldClose())
     {
